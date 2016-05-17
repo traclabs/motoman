@@ -45,6 +45,7 @@
 
 using industrial::joint_feedback_message::JointFeedbackMessage;
 using industrial::joint_feedback::JointFeedback;
+using industrial::joint_data::JointData;
 
 namespace industrial
 {
@@ -117,7 +118,7 @@ bool JointFeedbackEx::unload(industrial::byte_array::ByteArray *buffer)
     return false;
   }
 
-  for (int i = 0; i < this->groups_number_; i++)
+  for (int i = 0; i < MAX_NUM_GROUPS; i++)
   {
     JointFeedbackMessage tmp_msg;
     JointFeedback j_feedback;
@@ -131,7 +132,9 @@ bool JointFeedbackEx::unload(industrial::byte_array::ByteArray *buffer)
     }
     tmp_msg.init(j_feedback);
 
-    this->joint_feedback_messages_.push_back(tmp_msg);
+    JointData values;
+    if (tmp_msg.getPositions(values) || tmp_msg.getVelocities(values) || tmp_msg.getAccelerations(values))
+        this->joint_feedback_messages_.push_back(tmp_msg);
   }
 
 
