@@ -191,14 +191,19 @@ void JointTrajectoryAction::watchdog(const ros::TimerEvent &e, int group_number)
 
 void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh) {
 	gh.setAccepted();
-	
 	int group_number;
-	
-	// TODO(thiagodefreitas): change for getting the id from the group instead of a sequential checking on the map
 	
 	ros::Duration last_time_from_start(0.0);
 	
 	motoman_msgs::DynamicJointTrajectory dyn_traj;
+	
+	for (int group_index = 0; group_index < robot_groups_.size(); group_index++) {
+		// Tell the rest of the system this robot id has an active goal.
+		has_active_goal_map_[group_index]  = true;
+		// Set the goal as the active goal for this robot id.
+		active_goal_map_[group_index] = gh;
+		current_traj_map_[group_index] = active_goal_map_[group_index].getGoal()->trajectory;
+	}
 	
 	for (int i = 0; i < gh.getGoal()->trajectory.points.size(); i++) {
 		motoman_msgs::DynamicJointPoint dpoint;
@@ -263,9 +268,6 @@ void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh) {
 						*(gh.getGoal()->trajectory.points[i].effort.begin() + ros_idx));
 				}
 				
-				dyn_group.time_from_start = gh.getGoal()->trajectory.points[i].time_from_start;
-				dyn_group.group_number = group_number;
-				dyn_group.num_joints = dyn_group.positions.size();
 
 				/*
 				// Generate message for groups that were not present in the trajectory message
@@ -286,8 +288,9 @@ void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh) {
 				}
 				*/
 			}
-
-			
+			dyn_group.time_from_start = gh.getGoal()->trajectory.points[i].time_from_start;
+			dyn_group.group_number = group_number;
+			dyn_group.num_joints = dyn_group.positions.size();
 			
 			dpoint.groups.push_back(dyn_group);
 		}
@@ -674,13 +677,23 @@ bool JointTrajectoryAction::withinGoalConstraints(
   else
   {
     int last_point = traj.points.size() - 1;
-
     int group_number = robot_id;
+
+    std::vector<double> sorted_positions(robot_groups_[group_number].get_joint_names().size());
+    std::vector<std::string> sorted_joint_names(robot_groups_[group_number].get_joint_names().size());
+
+    for (int sort_index = 0; sort_index < robot_groups_[group_number].get_joint_names().size(); sort_index++) {
+        size_t ros_idx = std::find(traj.joint_names.begin(), traj.joint_names.end(), robot_groups_[group_number].get_joint_names()[sort_index]) - traj.joint_names.begin();
+        sorted_positions[sort_index] = traj.points[last_point].positions[ros_idx];
+        sorted_joint_names[sort_index] = traj.joint_names[ros_idx];
+    }
 
     if (industrial_robot_client::utils::isWithinRange(
           robot_groups_[group_number].get_joint_names(),
-          last_trajectory_state_map_[group_number]->actual.positions, traj.joint_names,
-          traj.points[last_point].positions, goal_threshold_))
+          last_trajectory_state_map_[group_number]->actual.positions,
+          sorted_joint_names,
+          sorted_positions,
+          goal_threshold_))
     {
       rtn = true;
     }
