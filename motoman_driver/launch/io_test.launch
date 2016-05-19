@@ -1,0 +1,9 @@
+<launch>
+	<arg name="robot_ip" />
+	<arg name="use_bswap" />
+
+	<param name="robot_ip_address" type="str" value="$(arg robot_ip)" />
+
+	<node if="$(arg use_bswap)" name="io_test" pkg="motoman_driver" type="io_test_bswap" />
+	<node unless="$(arg use_bswap)" name="io_test" pkg="motoman_driver" type="io_test" />
+</launch>
