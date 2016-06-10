@@ -34,6 +34,7 @@
 #ifndef MOTOMAN_DRIVER_IO_CTRL_H
 #define MOTOMAN_DRIVER_IO_CTRL_H
 
+#include "ros/ros.h" 
 #include "simple_message/smpl_msg_connection.h"
 #include "motoman_driver/simple_message/motoman_read_single_io.h"
 #include "motoman_driver/simple_message/motoman_read_single_io_reply.h"
@@ -87,6 +88,7 @@ public:
 
 protected:
   SmplMsgConnection* connection_;
+  ros::Publisher io_state_publisher_;
 
   bool sendAndReceive(industrial::shared_types::shared_int address,
     ReadSingleIOReply &reply);
