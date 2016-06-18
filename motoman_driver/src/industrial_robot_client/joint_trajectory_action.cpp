@@ -1,4 +1,5 @@
 /*
+ *
  * Software License Agreement (BSD License)
  *
  * Copyright (c) 2014, Fraunhofer IPA
@@ -189,7 +190,7 @@ void JointTrajectoryAction::watchdog(const ros::TimerEvent &e, int group_number)
   trajectory_state_recvd_ = false;
 }
 
-void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh) {
+void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle gh) {
 	gh.setAccepted();
 	int group_number;
 	
@@ -307,7 +308,7 @@ void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh) {
 	this->pub_trajectory_command_.publish(dyn_traj);
 }
 
-void JointTrajectoryAction::cancelCB(JointTractoryActionServer::GoalHandle & gh)
+void JointTrajectoryAction::cancelCB(JointTractoryActionServer::GoalHandle gh)
 {
   // The interface is provided, but it is recommended to use
   //  void JointTrajectoryAction::cancelCB(JointTractoryActionServer::GoalHandle & gh, int group_number)
@@ -315,7 +316,7 @@ void JointTrajectoryAction::cancelCB(JointTractoryActionServer::GoalHandle & gh)
   ROS_DEBUG("Received action cancel request");
 }
 
-void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh, int group_number)
+void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle gh, int group_number)
 {
   if (!gh.getGoal()->trajectory.points.empty())
   {
@@ -432,7 +433,7 @@ void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle & gh, i
 }
 
 void JointTrajectoryAction::cancelCB(
-  JointTractoryActionServer::GoalHandle & gh, int group_number)
+  JointTractoryActionServer::GoalHandle gh, int group_number)
 {
   ROS_DEBUG("Received action cancel request");
   if (active_goal_map_[group_number] == gh)
