@@ -356,15 +356,6 @@ void MotomanJointTrajectoryStreamer::streamingThread()
     }
 
     this->mutex_.lock();
-    // Hacked to publish the state of the IO continuously.
-    shared_int io_val = -1;
-    bool result = io_ctrl_.readSingleIO(20030, io_val);
-    if (result)
-    {
-      std_msgs::Int32 io_value;
-      io_value.data = io_val;
-      this->io_state_publisher.publish(io_value);
-    }
 
     SimpleMessage msg, tmpMsg, reply;
 
