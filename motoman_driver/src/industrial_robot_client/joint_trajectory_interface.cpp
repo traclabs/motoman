@@ -37,6 +37,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <stdexcept>
 
 using industrial_utils::param::getJointNames;
 using industrial_robot_client::motoman_utils::getJointGroups;
@@ -50,6 +51,52 @@ namespace industrial_robot_client
 {
 namespace joint_trajectory_interface
 {
+
+namespace
+{
+
+std::vector<std::size_t> makeReordering(
+  std::vector<std::string> const & source_names,
+  std::vector<std::string> const & target_names
+) {
+  // Make a map of joint names to indices in the trajectory.
+  std::map<std::string, std::size_t> index_map;
+  for (std::size_t i = 0; i < target_names.size(); i++) {
+    index_map.insert(std::make_pair(target_names[i], i));
+  }
+
+  // Make a vector of indices in the trajectory ordered according to the start state.
+  std::vector<std::size_t> reorder;
+  reorder.reserve(source_names.size());
+  for (std::size_t i = 0; i < source_names.size(); i++) {
+    reorder.push_back(index_map.at(source_names[i]));
+  }
+
+  return reorder;
+}
+
+trajectory_msgs::JointTrajectory setTrajectoryStartPoint(
+  trajectory_msgs::JointTrajectory const & trajectory,
+  sensor_msgs::JointState const & start
+) {
+  std::vector<std::size_t> reorder = makeReordering(start.name, trajectory.joint_names);
+
+  if (start.name.size() != start.position.size()) {
+    throw std::runtime_error("Invalid start point given, joint names do not match positions.");
+  }
+
+  if (start.name.size() != trajectory.joint_names.size()) {
+    throw std::runtime_error("Joint count mismatch between trajectory and start state.");
+  }
+
+  // Copy the position values of start to the first trajectory point.
+  trajectory_msgs::JointTrajectory result = trajectory;
+  for (std::size_t i = 0; i < start.position.size(); ++i) {
+    result.points.front().positions[i] = start.position[reorder[i]];
+  }
+}
+
+}
 
 #define ROS_ERROR_RETURN(rtn,...) do {ROS_ERROR(__VA_ARGS__); return(rtn);} while(0)
 
@@ -276,6 +323,7 @@ bool JointTrajectoryInterface::trajectory_to_msgs(
   msgs->clear();
 
   std::vector<double>::iterator it;
+  throw std::logic_error("Start state hack not fixed!");
 
   if (traj->points[0].num_groups == 1)
   {
@@ -330,13 +378,15 @@ bool JointTrajectoryInterface::trajectory_to_msgs(
   if (!is_valid(*traj))
     return false;
 
-  for (size_t i = 0; i < traj->points.size(); ++i)
+  trajectory_msgs::JointTrajectory modified = setTrajectoryStartPoint(*traj, cur_joint_pos_);
+
+  for (size_t i = 0; i < modified.points.size(); ++i)
   {
     SimpleMessage msg;
     ros_JointTrajPt rbt_pt, xform_pt;
 
     // select / reorder joints for sending to robot
-    if (!select(traj->joint_names, traj->points[i],
+    if (!select(modified.joint_names, modified.points[i],
                 this->all_joint_names_, &rbt_pt))
       return false;
 
