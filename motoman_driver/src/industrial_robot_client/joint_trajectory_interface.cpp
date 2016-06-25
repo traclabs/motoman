@@ -323,7 +323,6 @@ bool JointTrajectoryInterface::trajectory_to_msgs(
   msgs->clear();
 
   std::vector<double>::iterator it;
-  throw std::logic_error("Start state hack not fixed!");
 
   if (traj->points[0].num_groups == 1)
   {
