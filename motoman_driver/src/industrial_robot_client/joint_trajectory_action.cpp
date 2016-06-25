@@ -190,6 +190,15 @@ void JointTrajectoryAction::watchdog(const ros::TimerEvent &e, int group_number)
   trajectory_state_recvd_ = false;
 }
 
+void JointTractoryAction::allGroupsFinished() {
+	typename std::map<int, bool>::const_iterator iterator;
+
+	for (iterator i = active_goal_map_.begin(); i != active_goal_map_.end(); ++i) {
+		if (*i) return false;
+	}
+	return true;
+}
+
 void JointTrajectoryAction::goalCB(JointTractoryActionServer::GoalHandle gh) {
 	gh.setAccepted();
 	int group_number;
@@ -493,15 +502,15 @@ void JointTrajectoryAction::controllerStateCB(
       if (last_robot_status_->in_motion.val == industrial_msgs::TriState::FALSE)
       {
         ROS_INFO("Inside goal constraints, stopped moving, return success for action");
-        active_goal_map_[robot_id].setSucceeded();
         has_active_goal_map_[robot_id] = false;
+        if (allGroupsFinished()) active_goal_map_[robot_id].setSucceeded();
       }
       else if (last_robot_status_->in_motion.val == industrial_msgs::TriState::UNKNOWN)
       {
         ROS_INFO("Inside goal constraints, return success for action");
         ROS_WARN("Robot status in motion unknown, the robot driver node and controller code should be updated");
-        active_goal_map_[robot_id].setSucceeded();
         has_active_goal_map_[robot_id] = false;
+        if (allGroupsFinished()) active_goal_map_[robot_id].setSucceeded();
       }
       else
       {
@@ -512,8 +521,8 @@ void JointTrajectoryAction::controllerStateCB(
     {
       ROS_INFO("Inside goal constraints, return success for action");
       ROS_WARN("Robot status is not being published the robot driver node and controller code should be updated");
-      active_goal_map_[robot_id].setSucceeded();
       has_active_goal_map_[robot_id] = false;
+      if (allGroupsFinished()) active_goal_map_[robot_id].setSucceeded();
     }
   }
 }
