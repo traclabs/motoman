@@ -207,7 +207,7 @@ private:
    *
    * \return true if all robot groups finished their trajectory.
    */
-  bool allGroupsFinished();
+  bool allGroupsFinished() const;
 
   /**
    * \brief Action server goal callback method

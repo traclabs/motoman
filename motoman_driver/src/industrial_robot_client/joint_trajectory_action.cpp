@@ -190,11 +190,11 @@ void JointTrajectoryAction::watchdog(const ros::TimerEvent &e, int group_number)
   trajectory_state_recvd_ = false;
 }
 
-void JointTractoryAction::allGroupsFinished() {
-	typename std::map<int, bool>::const_iterator iterator;
+bool JointTrajectoryAction::allGroupsFinished() const {
+	typedef std::map<int, bool>::const_iterator iterator;
 
-	for (iterator i = active_goal_map_.begin(); i != active_goal_map_.end(); ++i) {
-		if (*i) return false;
+	for (iterator i = has_active_goal_map_.begin(); i != has_active_goal_map_.end(); ++i) {
+		if (i->second) return false;
 	}
 	return true;
 }
