@@ -37,15 +37,6 @@
 #include "MotionServer.h"
 #include "StateServer.h"
 
-extern STATUS setsockopt
-    (
-    int    s,                 /* target socket */
-    int    level,             /* protocol level of option */
-    int    optname,           /* option name */
-    char * optval,            /* pointer to option value */
-    int    optlen             /* option length */
-    );
-
 //-----------------------
 // Function Declarations
 //-----------------------
@@ -349,7 +340,7 @@ void Ros_Controller_ConnectionServer_Start(Controller* controller)
 			
 			printf("Accepted connection from client PC\r\n");
 			
-			s = setsockopt(sdAccepted, IPPROTO_TCP, TCP_NODELAY, (char*)&useNoDelay, sizeof (int));
+			s = mpSetsockopt(sdAccepted, IPPROTO_TCP, TCP_NODELAY, (char*)&useNoDelay, sizeof (int));
 			if( OK != s )
 			{
 				printf("Failed to set TCP_NODELAY.\r\n");
