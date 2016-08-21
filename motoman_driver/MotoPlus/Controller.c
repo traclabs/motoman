@@ -295,7 +295,7 @@ void Ros_Controller_ConnectionServer_Start(Controller* controller)
 {
 	int     sdMotionServer = INVALID_SOCKET;
 	int     sdStateServer = INVALID_SOCKET;
-	struct  fd_set  fds;
+	fd_set  fds;
 	int     sdAccepted = INVALID_SOCKET;
 	struct  sockaddr_in     clientSockAddr;
 	int     sizeofSockAddr;
