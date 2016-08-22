@@ -1,0 +1,3 @@
+TODO:
+
+ - wrap printf() to clearly separate motoros output from fake rtl debug output
