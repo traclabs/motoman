@@ -88,8 +88,7 @@ bool MotomanJointTrajectoryStreamer::init(SmplMsgConnection* connection, const s
     motion_ctrl_map_[robot_id] = motion_ctrl;
   }
 
-
-  // hacking this in here at this place
+  ROS_INFO("MotomanJointTrajectoryStreamer: starting IO services");
   io_ctrl_.init(connection);
   this->srv_read_single_io = this->node_.advertiseService("read_single_io",
       &MotomanJointTrajectoryStreamer::readSingleIoCB, this);
@@ -115,6 +114,13 @@ bool MotomanJointTrajectoryStreamer::init(SmplMsgConnection* connection, const s
     node_.param("robot_id", robot_id_, 0);
 
   rtn &= motion_ctrl_.init(connection, robot_id_);
+
+  ROS_INFO("MotomanJointTrajectoryStreamer: starting IO services");
+  io_ctrl_.init(connection);
+  this->srv_read_single_io = this->node_.advertiseService("read_single_io",
+      &MotomanJointTrajectoryStreamer::readSingleIoCB, this);
+  this->srv_write_single_io = this->node_.advertiseService("write_single_io",
+      &MotomanJointTrajectoryStreamer::writeSingleIoCB, this);
 
   return rtn;
 }
