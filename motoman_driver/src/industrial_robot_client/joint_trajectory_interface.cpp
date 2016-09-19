@@ -98,6 +98,7 @@ bool JointTrajectoryInterface::init(SmplMsgConnection* connection)
     {
       ROS_WARN("Unable to read 'controller_joint_names' param.  Using standard 6-DOF joint names.");
     }
+    this->all_joint_names_=joint_names;
     return init(connection, joint_names);
   }
   return false;
@@ -722,6 +723,14 @@ bool JointTrajectoryInterface::is_valid(const motoman_msgs::DynamicJointTrajecto
 void JointTrajectoryInterface::jointStateCB(
   const sensor_msgs::JointStateConstPtr &msg)
 {
+  if (msg->name.size() != this->all_joint_names_.size())
+    return;
+
+  for (uint i=0; i< msg->name.size(); i++)
+    if (std::find(msg->name.begin(),msg->name.end(),this->all_joint_names_[i]) ==
+        msg->name.end())
+      return;
+  
   this->cur_joint_pos_ = *msg;
 }
 
