@@ -617,7 +617,7 @@ bool JointTrajectoryAction::withinGoalConstraints(
     if (industrial_robot_client::utils::isWithinRange(
           last_trajectory_state_->joint_names,
           last_trajectory_state_->actual.positions, traj.joint_names,
-          traj.points[last_point].positions, goal_threshold_))
+          traj.points[last_point].positions, goal_threshold_*2))
     {
       rtn = true;
     }
@@ -649,7 +649,7 @@ bool JointTrajectoryAction::withinGoalConstraints(const control_msgs::FollowJoin
     if (industrial_robot_client::utils::isWithinRange(
           last_trajectory_state_map_[group_number]->joint_names,
           last_trajectory_state_map_[group_number]->actual.positions, traj.joint_names,
-          traj.points[last_point].groups[3].positions, goal_threshold_))
+          traj.points[last_point].groups[3].positions, goal_threshold_*2))
     {
       rtn = true;
     }
@@ -680,7 +680,7 @@ bool JointTrajectoryAction::withinGoalConstraints(
     if (industrial_robot_client::utils::isWithinRange(
           robot_groups_[group_number].get_joint_names(),
           last_trajectory_state_map_[group_number]->actual.positions, traj.joint_names,
-          traj.points[last_point].positions, goal_threshold_))
+          traj.points[last_point].positions, goal_threshold_*2))
     {
       rtn = true;
     }
