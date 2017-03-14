@@ -366,7 +366,6 @@ void MotomanJointTrajectoryStreamer::streamingThread()
       continue;
     }
 
-    this->mutex_.lock();
 
     SimpleMessage msg, tmpMsg, reply;
 
@@ -388,9 +387,10 @@ void MotomanJointTrajectoryStreamer::streamingThread()
       {
         ROS_DEBUG("Robot disconnected.  Attempting reconnect...");
         connectRetryCount = 5;
-        break;
+	break;
       }
-
+      this->mutex_.lock();
+      
       tmpMsg = this->current_traj_[this->current_point_];
       msg.init(tmpMsg.getMessageType(), CommTypes::SERVICE_REQUEST,
                ReplyTypes::INVALID, tmpMsg.getData());  // set commType=REQUEST
@@ -404,6 +404,7 @@ void MotomanJointTrajectoryStreamer::streamingThread()
         {
           ROS_ERROR("Aborting trajectory: Unable to parse JointTrajectoryPoint reply");
           this->state_ = TransferStates::IDLE;
+	  this->mutex_.unlock();
           break;
         }
 
@@ -413,24 +414,28 @@ void MotomanJointTrajectoryStreamer::streamingThread()
                     this->current_point_, static_cast<int>(this->current_traj_.size()));
           this->current_point_++;
         }
-        else if (reply_status.reply_.getResult() == MotionReplyResults::BUSY)
+        else if (reply_status.reply_.getResult() == MotionReplyResults::BUSY) {
+	  this->mutex_.unlock();
           break;  // silently retry sending this point
+	}
         else
         {
           ROS_ERROR_STREAM("Aborting Trajectory.  Failed to send point"
                            << " (#" << this->current_point_ << "): "
                            << MotomanMotionCtrl::getErrorString(reply_status.reply_));
           this->state_ = TransferStates::IDLE;
+	  this->mutex_.unlock();
           break;
         }
       }
+      this->mutex_.unlock();
       break;
     default:
       ROS_ERROR("Joint trajectory streamer: unknown state");
       this->state_ = TransferStates::IDLE;
       break;
     }
-    this->mutex_.unlock();
+
   }
   ROS_WARN("Exiting trajectory streamer thread");
 }
