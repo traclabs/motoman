@@ -387,7 +387,7 @@ void MotomanJointTrajectoryStreamer::streamingThread()
       {
         ROS_DEBUG("Robot disconnected.  Attempting reconnect...");
         connectRetryCount = 5;
-	break;
+	      break;
       }
       this->mutex_.lock();
       
@@ -404,7 +404,7 @@ void MotomanJointTrajectoryStreamer::streamingThread()
         {
           ROS_ERROR("Aborting trajectory: Unable to parse JointTrajectoryPoint reply");
           this->state_ = TransferStates::IDLE;
-	  this->mutex_.unlock();
+	        this->mutex_.unlock();
           break;
         }
 
@@ -415,10 +415,10 @@ void MotomanJointTrajectoryStreamer::streamingThread()
           this->current_point_++;
         }
         else if (reply_status.reply_.getResult() == MotionReplyResults::BUSY) {
-	  this->mutex_.unlock();
+	        this->mutex_.unlock();
           break;  // silently retry sending this point
-	}
-        else
+      	}
+       else
         {
           ROS_ERROR_STREAM("Aborting Trajectory.  Failed to send point"
                            << " (#" << this->current_point_ << "): "
