@@ -95,6 +95,9 @@ bool MotomanJointTrajectoryStreamer::init(SmplMsgConnection* connection, const s
   this->srv_write_single_io = this->node_.advertiseService("write_single_io",
       &MotomanJointTrajectoryStreamer::writeSingleIoCB, this);
 
+  disabler_ = node_.advertiseService("/motoman_disable", &MotomanJointTrajectoryStreamer::disableRobotCB, this);
+
+  enabler_ = node_.advertiseService("/motoman_enable", &MotomanJointTrajectoryStreamer::enableRobotCB, this);
 
   return rtn;
 }
@@ -121,6 +124,10 @@ bool MotomanJointTrajectoryStreamer::init(SmplMsgConnection* connection, const s
       &MotomanJointTrajectoryStreamer::readSingleIoCB, this);
   this->srv_write_single_io = this->node_.advertiseService("write_single_io",
       &MotomanJointTrajectoryStreamer::writeSingleIoCB, this);
+  
+  disabler_ = node_.advertiseService("/motoman_disable", &MotomanJointTrajectoryStreamer::disableRobotCB, this);
+
+  enabler_ = node_.advertiseService("/motoman_enable", &MotomanJointTrajectoryStreamer::enableRobotCB, this);
 
   return rtn;
 }
@@ -131,6 +138,43 @@ MotomanJointTrajectoryStreamer::~MotomanJointTrajectoryStreamer()
   motion_ctrl_.setTrajMode(false);   // release TrajMode, so INFORM jobs can run
 }
 
+bool MotomanJointTrajectoryStreamer::disableRobotCB(std_srvs::Trigger::Request &req,
+                                           std_srvs::Trigger::Response &res)
+{
+  bool ret = motion_ctrl_.setTrajMode(false);  
+  res.success = ret;
+  
+  if (!res.success)
+    res.message="Robot was NOT disabled. Please re-examine and retry.";
+  else
+    res.message="Robot is now disabled and will NOT accept motion commands.";
+
+  ROS_WARN_STREAM(res.message);
+
+  return true;
+
+}
+
+bool MotomanJointTrajectoryStreamer::enableRobotCB(std_srvs::Trigger::Request &req,
+						   std_srvs::Trigger::Response &res)
+{
+  bool ret = motion_ctrl_.setTrajMode(true);  
+  res.success = ret;
+  
+  if (!res.success)
+    res.message="Robot was NOT enabled. Please re-examine and retry.";
+  else
+    res.message="Robot is now enabled and will accept motion commands.";
+
+
+  ROS_WARN_STREAM(res.message);
+
+  return true;
+
+}
+
+
+  
 // override create_message to generate JointTrajPtFull message (instead of default JointTrajPt)
 bool MotomanJointTrajectoryStreamer::create_message(int seq, const trajectory_msgs::JointTrajectoryPoint &pt, SimpleMessage *msg)
 {
@@ -329,12 +373,12 @@ bool MotomanJointTrajectoryStreamer::VectorToJointData(const std::vector<double>
   }
   return true;
 }
-
+  
 // override send_to_robot to provide controllerReady() and setTrajMode() calls
 bool MotomanJointTrajectoryStreamer::send_to_robot(const std::vector<SimpleMessage>& messages)
 {
-  if (!motion_ctrl_.controllerReady() && !motion_ctrl_.setTrajMode(true))
-    ROS_ERROR_RETURN(false, "Failed to initialize MotoRos motion.  Trajectory ABORTED.  Correct issue and re-send trajectory.");
+  if (!motion_ctrl_.controllerReady())
+    ROS_ERROR_RETURN(false, "Failed to initialize MotoRos motion.  Trajectory ABORTED.  Send /motoman_enable signal when safe and re-send trajectory.");
 
   return JointTrajectoryStreamer::send_to_robot(messages);
 }
