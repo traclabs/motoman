@@ -36,6 +36,10 @@
 #include "motoman_driver/simple_message/messages/motoman_read_single_io_reply_message.h"
 #include "motoman_driver/simple_message/messages/motoman_write_single_io_message.h"
 #include "motoman_driver/simple_message/messages/motoman_write_single_io_reply_message.h"
+#include "motoman_driver/simple_message/messages/motoman_read_group_io_message.h"
+#include "motoman_driver/simple_message/messages/motoman_read_group_io_reply_message.h"
+#include "motoman_driver/simple_message/messages/motoman_write_group_io_message.h"
+#include "motoman_driver/simple_message/messages/motoman_write_group_io_reply_message.h"
 #include "ros/ros.h"
 #include "simple_message/simple_message.h"
 #include <string>
@@ -50,6 +54,17 @@ using motoman::simple_message::io_ctrl_reply_message::ReadSingleIOReplyMessage;
 using motoman::simple_message::io_ctrl::WriteSingleIO;
 using motoman::simple_message::io_ctrl_message::WriteSingleIOMessage;
 using motoman::simple_message::io_ctrl_reply_message::WriteSingleIOReplyMessage;
+
+namespace ReadGroupIOReplyResults = motoman::simple_message::io_ctrl_reply::ReadGroupIOReplyResults;
+namespace WriteGroupIOReplyResults = motoman::simple_message::io_ctrl_reply::WriteGroupIOReplyResults;
+
+using motoman::simple_message::io_ctrl::ReadGroupIO;
+using motoman::simple_message::io_ctrl_message::ReadGroupIOMessage;
+using motoman::simple_message::io_ctrl_reply_message::ReadGroupIOReplyMessage;
+using motoman::simple_message::io_ctrl::WriteGroupIO;
+using motoman::simple_message::io_ctrl_message::WriteGroupIOMessage;
+using motoman::simple_message::io_ctrl_reply_message::WriteGroupIOReplyMessage;
+
 using industrial::simple_message::SimpleMessage;
 using industrial::shared_types::shared_int;
 
@@ -93,6 +108,35 @@ bool MotomanIoCtrl::writeSingleIO(shared_int address, shared_int value)
   return (reply.getResultCode() == WriteSingleIOReplyResults::SUCCESS);
 }
 
+bool MotomanIoCtrl::readGroupIO(shared_int address, shared_int &value)
+{
+  ReadGroupIOReply reply;
+
+  if (!sendAndReceive(address, reply))
+  {
+    ROS_ERROR("Failed to send READ_GROUP_IO command");
+    return false;
+  }
+
+  value = reply.getValue();
+
+  return (reply.getResultCode() == ReadGroupIOReplyResults::SUCCESS);
+}
+
+bool MotomanIoCtrl::writeGroupIO(shared_int address, shared_int value)
+{
+  WriteGroupIOReply reply;
+
+  if (!sendAndReceive(address, value, reply))
+  {
+    ROS_ERROR("Failed to send WRITE_GROUP_IO command");
+    return false;
+  }
+
+  return (reply.getResultCode() == WriteGroupIOReplyResults::SUCCESS);
+}
+
+  
 bool MotomanIoCtrl::sendAndReceive(shared_int address, ReadSingleIOReply &reply)
 {
   SimpleMessage req, res;
@@ -139,6 +183,53 @@ bool MotomanIoCtrl::sendAndReceive(shared_int address, shared_int value, WriteSi
   return true;
 }
 
+bool MotomanIoCtrl::sendAndReceive(shared_int address, ReadGroupIOReply &reply)
+{
+  SimpleMessage req, res;
+  ReadGroupIO data;
+  ReadGroupIOMessage read_io_msg;
+  ReadGroupIOReplyMessage read_io_reply;
+
+  data.init(address);
+  read_io_msg.init(data);
+  read_io_msg.toRequest(req);
+
+  if (!this->connection_->sendAndReceiveMsg(req, res))
+  {
+    ROS_ERROR("Failed to send ReadGroupIO message");
+    return false;
+  }
+
+  read_io_reply.init(res);
+  reply.copyFrom(read_io_reply.reply_);
+
+  return true;
+}
+
+bool MotomanIoCtrl::sendAndReceive(shared_int address, shared_int value, WriteGroupIOReply &reply)
+{
+  SimpleMessage req, res;
+  WriteGroupIO data;
+  WriteGroupIOMessage write_io_msg;
+  WriteGroupIOReplyMessage write_io_reply;
+
+  data.init(address, value);
+  write_io_msg.init(data);
+  write_io_msg.toRequest(req);
+
+  if (!this->connection_->sendAndReceiveMsg(req, res))
+  {
+    ROS_ERROR("Failed to send WriteGroupIO message");
+    return false;
+  }
+
+  write_io_reply.init(res);
+  reply.copyFrom(write_io_reply.reply_);
+
+  return true;
+}
+
+  
 } // io_ctrl
 
 } // motoman

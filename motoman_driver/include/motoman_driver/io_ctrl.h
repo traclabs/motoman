@@ -39,6 +39,10 @@
 #include "motoman_driver/simple_message/motoman_read_single_io_reply.h"
 #include "motoman_driver/simple_message/motoman_write_single_io.h"
 #include "motoman_driver/simple_message/motoman_write_single_io_reply.h"
+#include "motoman_driver/simple_message/motoman_read_group_io.h"
+#include "motoman_driver/simple_message/motoman_read_group_io_reply.h"
+#include "motoman_driver/simple_message/motoman_write_group_io.h"
+#include "motoman_driver/simple_message/motoman_write_group_io_reply.h"
 
 namespace motoman
 {
@@ -47,7 +51,10 @@ namespace io_ctrl
 using industrial::smpl_msg_connection::SmplMsgConnection;
 using motoman::simple_message::io_ctrl_reply::ReadSingleIOReply;
 using motoman::simple_message::io_ctrl_reply::WriteSingleIOReply;
+using motoman::simple_message::io_ctrl_reply::ReadGroupIOReply;
+using motoman::simple_message::io_ctrl_reply::WriteGroupIOReply;
 
+ 
 /**
  * \brief Wrapper class around Motoman-specific io control commands
  */
@@ -85,6 +92,29 @@ public:
   bool writeSingleIO(industrial::shared_types::shared_int address,
     industrial::shared_types::shared_int value);
 
+  /**
+   * \brief Reads a group IO point on the controller.
+   *
+   * Note: if reading was unsuccessful, the value of value is undefined.
+   *
+   * \param address The address (index) of the IO point
+   * \param value [out] Will contain the value of the IO point
+   * \return True IFF reading was successful
+   */
+  bool readGroupIO(industrial::shared_types::shared_int address,
+    industrial::shared_types::shared_int &value);
+
+  /**
+   * \brief Writes to a group IO point on the controller.
+   *
+   * \param address The address (index) of the IO point
+   * \param value The value to set the IO element to
+   * \return True IFF writing was successful
+   */
+  bool writeGroupIO(industrial::shared_types::shared_int address,
+    industrial::shared_types::shared_int value);
+
+  
 protected:
   SmplMsgConnection* connection_;
 
@@ -93,6 +123,13 @@ protected:
   bool sendAndReceive(industrial::shared_types::shared_int address,
     industrial::shared_types::shared_int value,
     WriteSingleIOReply &reply);
+  bool sendAndReceive(industrial::shared_types::shared_int address,
+    ReadGroupIOReply &reply);
+  bool sendAndReceive(industrial::shared_types::shared_int address,
+    industrial::shared_types::shared_int value,
+    WriteGroupIOReply &reply);
+
+
 };
 
 }  // namespace io_ctrl

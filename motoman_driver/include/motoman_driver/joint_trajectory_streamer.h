@@ -42,6 +42,8 @@
 #include "motoman_driver/io_ctrl.h"
 #include "motoman_msgs/ReadSingleIO.h"
 #include "motoman_msgs/WriteSingleIO.h"
+#include "motoman_msgs/ReadGroupIO.h"
+#include "motoman_msgs/WriteGroupIO.h"
 #include "std_srvs/Trigger.h"
 
 namespace motoman
@@ -149,6 +151,15 @@ protected:
   bool writeSingleIoCB(motoman_msgs::WriteSingleIO::Request &req,
                             motoman_msgs::WriteSingleIO::Response &res);
 
+  ros::ServiceServer srv_read_group_io;   // handle for read_group_io service
+  ros::ServiceServer srv_write_group_io;   // handle for write_group_io service
+
+  bool readGroupIoCB(motoman_msgs::ReadGroupIO::Request &req,
+                            motoman_msgs::ReadGroupIO::Response &res);
+  bool writeGroupIoCB(motoman_msgs::WriteGroupIO::Request &req,
+                            motoman_msgs::WriteGroupIO::Response &res);
+
+  
   void trajectoryStop();
   bool is_valid(const trajectory_msgs::JointTrajectory &traj);
   bool is_valid(const motoman_msgs::DynamicJointTrajectory &traj);

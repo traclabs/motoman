@@ -94,7 +94,12 @@ bool MotomanJointTrajectoryStreamer::init(SmplMsgConnection* connection, const s
       &MotomanJointTrajectoryStreamer::readSingleIoCB, this);
   this->srv_write_single_io = this->node_.advertiseService("write_single_io",
       &MotomanJointTrajectoryStreamer::writeSingleIoCB, this);
+  this->srv_read_group_io = this->node_.advertiseService("read_group_io",
+      &MotomanJointTrajectoryStreamer::readGroupIoCB, this);
+  this->srv_write_group_io = this->node_.advertiseService("write_group_io",
+      &MotomanJointTrajectoryStreamer::writeGroupIoCB, this);
 
+  
   disabler_ = node_.advertiseService("/robot_disable", &MotomanJointTrajectoryStreamer::disableRobotCB, this);
 
   enabler_ = node_.advertiseService("/robot_enable", &MotomanJointTrajectoryStreamer::enableRobotCB, this);
@@ -124,6 +129,10 @@ bool MotomanJointTrajectoryStreamer::init(SmplMsgConnection* connection, const s
       &MotomanJointTrajectoryStreamer::readSingleIoCB, this);
   this->srv_write_single_io = this->node_.advertiseService("write_single_io",
       &MotomanJointTrajectoryStreamer::writeSingleIoCB, this);
+  this->srv_read_group_io = this->node_.advertiseService("read_group_io",
+      &MotomanJointTrajectoryStreamer::readGroupIoCB, this);
+  this->srv_write_group_io = this->node_.advertiseService("write_group_io",
+      &MotomanJointTrajectoryStreamer::writeGroupIoCB, this);
   
   disabler_ = node_.advertiseService("/robot_disable", &MotomanJointTrajectoryStreamer::disableRobotCB, this);
 
@@ -600,6 +609,53 @@ bool MotomanJointTrajectoryStreamer::writeSingleIoCB(
   // send message and release mutex as soon as possible
   this->mutex_.lock();
   bool result = io_ctrl_.writeSingleIO(req.address, req.value);
+  this->mutex_.unlock();
+
+  if (!result)
+  {
+    ROS_ERROR("Writing IO element %d failed", req.address);
+    return false;
+  }
+  ROS_INFO("Element %d set to: %d", req.address, req.value);
+
+  return true;
+}
+
+
+// Service to read a group IO
+bool MotomanJointTrajectoryStreamer::readGroupIoCB(
+  motoman_msgs::ReadGroupIO::Request &req,
+  motoman_msgs::ReadGroupIO::Response &res)
+{
+  shared_int io_val= -1;
+
+  // send message and release mutex as soon as possible
+  this->mutex_.lock();
+  bool result = io_ctrl_.readGroupIO(req.address, io_val);
+  this->mutex_.unlock();
+
+  if (!result)
+  {
+    ROS_ERROR("Reading IO element %d failed", req.address);
+    return false;
+  }
+  res.value = io_val;
+  ROS_INFO("Element %d value: %d", req.address, io_val);
+
+  return true;
+}
+
+
+// Service to write Group IO
+bool MotomanJointTrajectoryStreamer::writeGroupIoCB(
+  motoman_msgs::WriteGroupIO::Request &req,
+  motoman_msgs::WriteGroupIO::Response &res)
+{
+  shared_int io_val= -1;
+
+  // send message and release mutex as soon as possible
+  this->mutex_.lock();
+  bool result = io_ctrl_.writeGroupIO(req.address, req.value);
   this->mutex_.unlock();
 
   if (!result)
