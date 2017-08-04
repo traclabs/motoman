@@ -616,7 +616,7 @@ bool MotomanJointTrajectoryStreamer::writeSingleIoCB(
     ROS_ERROR("Writing IO element %d failed", req.address);
     return false;
   }
-  ROS_INFO("Element %d set to: %d", req.address, req.value);
+  ROS_DEBUG("Element %d set to: %d", req.address, req.value);
 
   return true;
 }
@@ -640,7 +640,7 @@ bool MotomanJointTrajectoryStreamer::readGroupIoCB(
     return false;
   }
   res.value = io_val;
-  ROS_INFO("Element %d value: %d", req.address, io_val);
+  ROS_DEBUG("Element %d value: %d", req.address, io_val);
 
   return true;
 }
