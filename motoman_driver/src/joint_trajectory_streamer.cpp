@@ -35,6 +35,7 @@
 #include "motoman_driver/simple_message/messages/joint_traj_pt_full_ex_message.h"
 #include "industrial_robot_client/utils.h"
 #include "industrial_utils/param_utils.h"
+#include "std_msgs/Empty.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -73,6 +74,8 @@ bool MotomanJointTrajectoryStreamer::init(SmplMsgConnection* connection, const s
   bool rtn = true;
 
   ROS_INFO("MotomanJointTrajectoryStreamer: init");
+
+  retry_pub_ = this->node_.advertise<std_msgs::Empty>("/retry_execution",1);
 
   this->robot_groups_ = robot_groups;
   rtn &= JointTrajectoryStreamer::init(connection, robot_groups, velocity_limits);
@@ -533,8 +536,10 @@ bool MotomanJointTrajectoryStreamer::is_valid(const trajectory_msgs::JointTrajec
   {
     ROS_ERROR_STREAM("Current joints: "<<cur_joint_pos_);
     ROS_ERROR_STREAM("Start joints: "<<traj.points[0]);
+    retry_pub_.publish(std_msgs::Empty());
     ROS_ERROR_RETURN(false, "Validation failed: Trajectory doesn't start at current position.");
   }
+
   return true;
 }
 
