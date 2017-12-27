@@ -66,7 +66,12 @@ bool MotomanMotionCtrl::controllerReady()
     return false;
   }
 
-  return (reply.getResult() == MotionReplyResults::TRUE);
+  if (reply.getResult() != MotionReplyResults::TRUE) {
+    ROS_ERROR_STREAM("CHECK_MOTION_READY did not return true.  Result: "<<reply.getResultString()<<" / Subcode: "<<reply.getSubcodeString());
+    return false;
+  }
+  
+  return true;
 }
 
 
